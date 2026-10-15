@@ -52,26 +52,101 @@ laps = laps.sort_values("lap_number")
 
 print(laps.head(10).to_string(index=False))
 
-# Create the chart.
-plt.figure(figsize=(10, 5))
-
-# Plot race lap against lap time.
-plt.plot(
-    laps["lap_number"],
-    laps["lap_duration"],
-    marker="o",
-    markersize=3,
-    linewidth=1
+# Download Verstappen's tire stints.
+response = requests.get(
+    "https://api.openf1.org/v1/stints",
+    params={
+        "session_key": session_key,
+        "driver_number": 1
+    },
+    timeout=30
 )
 
-# Add labels.
-plt.title("Verstappen's Lap Times — Bahrain 2024")
+response.raise_for_status()
+
+# Turn the stint records into a table.
+stints = pd.DataFrame(response.json())
+
+# Keep the columns we need.
+stints = stints[
+    ["stint_number", "lap_start", "lap_end", "compound", "tyre_age_at_start"]
+]
+
+stints = stints.sort_values("stint_number")
+
+print("\nTire stints:")
+print(stints.to_string(index=False))
+
+# Keep laps with a recorded time.
+clean_laps = laps.dropna(subset=["lap_duration"]).copy()
+
+# Remove the opening lap because it includes the race start.
+clean_laps = clean_laps[clean_laps["lap_number"] > 1]
+
+# Remove laps where the driver exited the pits.
+clean_laps = clean_laps[clean_laps["is_pit_out_lap"] == False]
+
+# Also exclude the last lap before each tire change.
+# The final stint ends at the finish, so leave that one alone.
+for lap_number in stints["lap_end"].iloc[:-1]:
+    clean_laps = clean_laps[clean_laps["lap_number"] != lap_number]
+
+# Build one summary row for each stint.
+summary_rows = []
+
+for index, stint in stints.iterrows():
+
+    stint_laps = clean_laps[
+        (clean_laps["lap_number"] >= stint["lap_start"])
+        & (clean_laps["lap_number"] <= stint["lap_end"])
+    ]
+
+    summary_rows.append({
+        "Stint": int(stint["stint_number"]),
+        "Tire": stint["compound"],
+        "Laps analyzed": len(stint_laps),
+        "Median time (s)": stint_laps["lap_duration"].median(),
+        "Standard deviation (s)": stint_laps["lap_duration"].std()
+    })
+
+# Convert our list of summary rows into a table.
+summary = pd.DataFrame(summary_rows)
+
+print("\nStint comparison:")
+print(summary.round(3).to_string(index=False))
+
+# Choose a color for each tire compound.
+colors = {
+    "SOFT": "red",
+    "MEDIUM": "gold",
+    "HARD": "gray"
+}
+
+plt.figure(figsize=(10, 5))
+
+# Go through the stint table one row at a time.
+for index, stint in stints.iterrows():
+
+    # Select the laps belonging to this stint.
+    stint_laps = clean_laps[
+        (clean_laps["lap_number"] >= stint["lap_start"])
+        & (clean_laps["lap_number"] <= stint["lap_end"])
+    ]
+
+    # Plot this stint as its own line.
+    plt.plot(
+        stint_laps["lap_number"],
+        stint_laps["lap_duration"],
+        color=colors[stint["compound"]],
+        marker="o",
+        markersize=3,
+        label=f"Stint {stint['stint_number']}: {stint['compound']}"
+    )
+
+plt.title("Verstappen's Race Pace by Tire Stint — Bahrain 2024")
 plt.xlabel("Lap Number")
 plt.ylabel("Lap Time (seconds)")
-
-# Make the chart easier to read.
+plt.legend()
 plt.grid(alpha=0.3)
 plt.tight_layout()
-
-# Display the chart.
 plt.show()
