@@ -2,6 +2,7 @@ import requests
 import pandas as pd
 import matplotlib.pyplot as plt
 from statistics import linear_regression
+import json
 
 # Find the 2024 Bahrain race.
 response = requests.get(
@@ -44,7 +45,7 @@ laps = pd.DataFrame(response.json())
 if laps.empty:
     raise SystemExit("No lap data was returned.")
 
-# Show the columns we need first.
+# Keep the columns we need.
 laps = laps[
     ["driver_number", "lap_number", "lap_duration", "is_pit_out_lap"]
 ]
@@ -133,6 +134,16 @@ model = linear_regression(
     train["lap_duration"].tolist()
 )
 
+# NEW: Save the fitted model for app.py.
+# These two numbers define the regression line.
+with open("model_parameters.json", "w") as file:
+    json.dump({
+        "slope": float(model.slope),
+        "intercept": float(model.intercept)
+    }, file, indent=2)
+
+print("\nSaved model_parameters.json for the Streamlit app.")
+
 # Make predictions for the test laps.
 results = test[["lap_number", "lap_duration"]].copy()
 
@@ -157,6 +168,57 @@ print(results.round(3).to_string(index=False))
 
 print(f"\nTrend model MAE: {model_mae:.3f} seconds")
 print(f"Median baseline MAE: {baseline_mae:.3f} seconds")
+
+# Example assumptions, not measured Bahrain values.
+new_tire_pace = 95.0       # First lap on replacement tires, in seconds
+new_tire_slowdown = 0.05   # Additional seconds for each lap of tire use
+pit_time_loss = 22.0       # Total extra time lost through the pit lane
+
+
+def simulate_strategy(pit_lap):
+    total_time = 0
+
+    # Simulate laps 31 through 40.
+    for lap in range(31, 41):
+
+        if lap < pit_lap:
+            # Continue on the old tires using our existing model.
+            lap_time = model.intercept + model.slope * lap
+
+        else:
+            # Replacement tires get older with each lap.
+            laps_since_change = lap - pit_lap
+
+            lap_time = (
+                new_tire_pace
+                + new_tire_slowdown * laps_since_change
+            )
+
+        # Add the pit loss once, when the tires are changed.
+        if lap == pit_lap:
+            lap_time = lap_time + pit_time_loss
+
+        total_time = total_time + lap_time
+
+    return total_time
+
+
+# Compare the two choices.
+pit_now_time = simulate_strategy(31)
+pit_later_time = simulate_strategy(34)
+
+print("\nStrategy simulation — laps 31–40:")
+print(f"Pit now:   {pit_now_time:.3f} seconds")
+print(f"Pit later: {pit_later_time:.3f} seconds")
+
+difference = pit_later_time - pit_now_time
+
+if difference > 0:
+    print(f"Pitting now is quicker by {difference:.3f} seconds.")
+elif difference < 0:
+    print(f"Pitting later is quicker by {abs(difference):.3f} seconds.")
+else:
+    print("Both strategies take the same time.")
 
 # Choose a color for each tire compound.
 colors = {
