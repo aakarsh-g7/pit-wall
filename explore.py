@@ -1,6 +1,7 @@
 import requests
 import pandas as pd
 import matplotlib.pyplot as plt
+from statistics import linear_regression
 
 # Find the 2024 Bahrain race.
 response = requests.get(
@@ -114,6 +115,48 @@ summary = pd.DataFrame(summary_rows)
 
 print("\nStint comparison:")
 print(summary.round(3).to_string(index=False))
+
+# Select the cleaned laps from the hard-tire stint.
+hard_laps = clean_laps[
+    (clean_laps["lap_number"] >= 18)
+    & (clean_laps["lap_number"] <= 37)
+].sort_values("lap_number")
+
+# Learn from the first 12 laps. Test on the remaining laps.
+train = hard_laps.iloc[:12]
+test = hard_laps.iloc[12:]
+
+# Fit a straight line:
+# predicted lap time = intercept + slope * lap number
+model = linear_regression(
+    train["lap_number"].tolist(),
+    train["lap_duration"].tolist()
+)
+
+# Make predictions for the test laps.
+results = test[["lap_number", "lap_duration"]].copy()
+
+results["prediction"] = (
+    model.intercept + model.slope * results["lap_number"]
+)
+
+# Our baseline predicts the training median for every test lap.
+results["baseline"] = train["lap_duration"].median()
+
+# Calculate mean absolute error: the average size of the miss.
+model_mae = (
+    results["lap_duration"] - results["prediction"]
+).abs().mean()
+
+baseline_mae = (
+    results["lap_duration"] - results["baseline"]
+).abs().mean()
+
+print("\nPrediction results:")
+print(results.round(3).to_string(index=False))
+
+print(f"\nTrend model MAE: {model_mae:.3f} seconds")
+print(f"Median baseline MAE: {baseline_mae:.3f} seconds")
 
 # Choose a color for each tire compound.
 colors = {
