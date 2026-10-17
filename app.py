@@ -1,11 +1,11 @@
 import json
 import streamlit as st
 
-# Read the model saved by explore.py.
+# Read the model saved by explore.py
 with open("model_parameters.json") as file:
     model_parameters = json.load(file)
 
-st.title("🏁 Pit Wall")
+st.title("Pit Wall")
 st.write("Bahrain 2024 · Max Verstappen · End of lap 30")
 
 st.write(
