@@ -1,7 +1,7 @@
 import json
 import streamlit as st
 
-# Read the model saved by explore.py
+# Read model saved by explore.py
 with open("model_parameters.json") as file:
     model_parameters = json.load(file)
 
