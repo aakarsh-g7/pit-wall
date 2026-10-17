@@ -1,10 +1,6 @@
 # Pit Wall
 
-### Interactive F1 pit stop strategy
-
-**Pit now or stay out?** Pit Wall explores how tire performance and pit timing affect the race. Built with Python and Streamlit. Uses historical F1 data with a ML prediction model to compare 2 pit stop decisions.
-
-The project uses Max Verstappen’s 2024 Bahrain Grand Prix as a case study. Users can adjust replacement-tire pace and slowdown to see when each strategy becomes faster.
+Pit Wall explores how tire performance and pit timing affect the race. Built with python and streamlit. Uses historical F1 data with a ML prediction model to compare 2 pit stop decisions. Uses Max Verstappen’s 2024 Bahrain Grand Prix as a case study. Users can adjust replacement-tire pace and slowdown to see when each strategy becomes faster.
 
 ## Features
 
@@ -16,7 +12,7 @@ The project uses Max Verstappen’s 2024 Bahrain Grand Prix as a case study. Use
 
 ## How?
 
-A linear regression estimates lap times on the existing tires. Assumptions estimate performance after the tire change. The simulator adds a fixed pit stop loss and compares total time over laps 31–40
+Uses a linear regression model to estimate lap times on existing tires. Assumptions estimate performance after the tire change. The simulator adds a fixed pit stop loss and compares total time over laps 31–40
 
 ## Why?
 
@@ -26,4 +22,4 @@ Combining interest in F1 with data science and product thinking. Turned an analy
 
 Excludes traffic, tire warmup, safety cars, and remaining laps. Results depend on the selected assumptions.
 
-Built with: python, streamlit, pandas, matplotlib, openf1 🏎️
+Built using python, streamlit, pandas, matplotlib, openf1 🏎️
