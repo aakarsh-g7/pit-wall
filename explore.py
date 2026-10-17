@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from statistics import linear_regression
 import json
 
-# Find the 2024 Bahrain race.
+# 2024 Bahrain race data from openF1
 response = requests.get(
     "https://api.openf1.org/v1/sessions",
     params={
@@ -15,7 +15,7 @@ response = requests.get(
     timeout=30
 )
 
-# Stop here if the download failed.
+# If download fails
 response.raise_for_status()
 
 sessions = response.json()
@@ -23,11 +23,11 @@ sessions = response.json()
 if not sessions:
     raise SystemExit("No matching race was found.")
 
-# Each session has a unique ID.
+# Session's unique ID
 session_key = sessions[0]["session_key"]
 print("Race ID:", session_key)
 
-# Download Max Verstappen's laps. His driver number was 1.
+# Max Verstappen's laps (driver 1)
 response = requests.get(
     "https://api.openf1.org/v1/laps",
     params={
