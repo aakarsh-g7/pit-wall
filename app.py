@@ -9,12 +9,12 @@ st.title("Pit Wall")
 st.write("Bahrain 2024 · Max Verstappen · End of lap 30")
 
 st.write(
-    "Would you change tires before lap 31 or wait until lap 34? "
-    "Compare the estimated time over laps 31–40."
+    "Would you change tires on lap 31 or wait until lap 34? "
+    "Compare the estimated race time over laps 31–40."
 )
 
 st.caption(
-    "Old-tire pace comes from the historical model. "
+    "Old-tire pace is estimated using historical data. "
     "Replacement-tire performance uses the assumptions below."
 )
 
@@ -70,25 +70,23 @@ if st.button("Compare strategies"):
 
     left, right = st.columns(2)
 
-    left.metric("Pit before lap 31", f"{pit_now_time:.2f} seconds")
-    right.metric("Pit before lap 34", f"{pit_later_time:.2f} seconds")
+    left.metric("Pit on lap 31", f"{pit_now_time:.2f} seconds")
+    right.metric("Pit on lap 34", f"{pit_later_time:.2f} seconds")
 
     difference = pit_later_time - pit_now_time
 
     if difference > 0:
         st.success(
-            f"In this scenario, pitting now is "
-            f"{difference:.2f} seconds quicker."
+            f"Pitting on lap 31 is {difference:.2f} seconds quicker."
         )
     elif difference < 0:
         st.success(
-            f"In this scenario, waiting is "
-            f"{abs(difference):.2f} seconds quicker."
+            f"Pitting on lap 34 is {abs(difference):.2f} seconds quicker."
         )
     else:
         st.info("Both strategies take the same time.")
 
 st.caption(
-    "Both strategies assume one identical 22-second pit loss. "
-    "This simplified simulation excludes traffic and tire warmup."
+    "Both strategies assume one identical 22-second pit loss."
+    "This simulation excludes traffic and tire warmup."
 )
