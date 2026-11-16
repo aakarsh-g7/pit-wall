@@ -1,20 +1,14 @@
-import fastf1
+"""Check the OpenF1 source used by explore.py."""
+
 import requests
 
-race = fastf1.get_session(2024, "Bahrain", "R")
-
-url = (
-    "https://livetiming.formula1.com"
-    + race.api_path
-    + "SessionInfo.jsonStream"
-)
-
 response = requests.get(
-    url,
-    headers={"User-Agent": "BestHTTP"},
-    timeout=20
+    "https://api.openf1.org/v1/sessions",
+    params={"year": 2024, "country_name": "Bahrain", "session_name": "Race"},
+    timeout=30,
 )
-
-print("URL:", url)
-print("Status:", response.status_code)
-print("Response:", response.text[:200])
+response.raise_for_status()
+sessions = response.json()
+if not sessions:
+    raise SystemExit("No matching race was found.")
+print("OpenF1 connection OK. Bahrain 2024 race ID:", sessions[0]["session_key"])
